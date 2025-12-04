@@ -15,7 +15,7 @@ defmodule Solution do
   def find_rolls(t) do
     t
     |> Nx.window_sum({3, 3}, padding: :same)
-    |> Nx.less_equal(4)
+    |> Nx.less(5)
     |> Nx.logical_and(t)
   end
 
