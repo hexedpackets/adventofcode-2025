@@ -33,10 +33,6 @@ defmodule Solution do
         range.first <= last_range.last ->
           # Clamp the start of the range to avoid double-counting
           first = last_range.last + 1
-          if first > range.last do
-            dbg range
-            dbg last_range
-          end
           range = first..range.last
           {range, range}
 
