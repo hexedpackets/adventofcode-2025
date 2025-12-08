@@ -52,6 +52,44 @@ defmodule Solution do
     connect(distances, count - 1, acc)
   end
 
+  def connect_all([], {_, {[x1, _, _], [x2, _, _]}}) do
+    x1 * x2
+  end
+  def connect_all([{p1, p2, _} | distances], {acc, last_points}) do
+    circuits = Stream.with_index(acc)
+
+    match1 = Enum.find(circuits, fn {set, _} -> MapSet.member?(set, p1) end)
+    match2 = Enum.find(circuits, fn {set, _} -> MapSet.member?(set, p2) end)
+
+    acc =
+      case {match1, match2} do
+        {nil, nil} ->
+          {[MapSet.new([p1, p2]) | acc], {p1, p2}}
+
+        {nil, {circuit, index}} ->
+          circuit = MapSet.put(circuit, p1)
+          acc = List.replace_at(acc, index, circuit)
+          {acc, {p1, p2}}
+
+        {{circuit, index}, nil} ->
+          circuit = MapSet.put(circuit, p2)
+          acc = List.replace_at(acc, index, circuit)
+          {acc, {p1, p2}}
+
+        {{_, index}, {_, index}} ->
+          {acc, last_points}
+
+        {{circuit1, index1}, {circuit2, index2}} ->
+          circuit = MapSet.union(circuit1, circuit2)
+          acc = acc
+          |> List.replace_at(index1, circuit)
+          |> List.delete_at(index2)
+          {acc, {p1, p2}}
+      end
+
+    connect_all(distances, acc)
+  end
+
   def mult_size(circuits, count) do
     circuits
     |> Stream.map(fn set -> MapSet.size(set) end)
@@ -61,7 +99,7 @@ defmodule Solution do
   end
 end
 
-File.read!("input/08.txt")
+boxes = File.read!("input/08.txt")
 |> String.split("\n", trim: true)
 |> Enum.map(fn row ->
   row
@@ -69,6 +107,14 @@ File.read!("input/08.txt")
   |> Enum.map(&String.to_integer/1)
 end)
 |> Solution.calc_all_distances([])
+
+IO.write("Part 1: ")
+boxes
 |> Solution.connect(1000, [])
 |> Solution.mult_size(3)
-|> IO.inspect
+|> IO.puts()
+
+IO.write("Part 2: ")
+boxes
+|> Solution.connect_all({[], nil})
+|> IO.inspect()
